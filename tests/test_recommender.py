@@ -1,4 +1,4 @@
-from src.recommender import Song, UserProfile, Recommender
+from src.recommender import Song, UserProfile, Recommender, DEFAULT_TASTE_PROFILE, score_song
 
 def make_small_recommender() -> Recommender:
     songs = [
@@ -59,3 +59,31 @@ def test_explain_recommendation_returns_non_empty_string():
     explanation = rec.explain_recommendation(user, song)
     assert isinstance(explanation, str)
     assert explanation.strip() != ""
+
+
+def test_default_taste_profile_is_defined():
+    assert DEFAULT_TASTE_PROFILE["favorite_genre"] == "pop"
+    assert DEFAULT_TASTE_PROFILE["favorite_mood"] == "happy"
+    assert DEFAULT_TASTE_PROFILE["target_energy"] == 0.8
+    assert DEFAULT_TASTE_PROFILE["target_tempo_bpm"] == 120
+
+
+def test_score_song_uses_weighted_genre_mood_energy_recipe():
+    user_prefs = {
+        "favorite_genre": "pop",
+        "favorite_mood": "happy",
+        "target_energy": 0.8,
+    }
+    song = {
+        "genre": "pop",
+        "mood": "happy",
+        "energy": 0.8,
+    }
+
+    score, reasons = score_song(user_prefs, song)
+
+    assert score == 5.0
+    assert len(reasons) >= 3
+    assert any("genre matched (+2.0)" in reason for reason in reasons)
+    assert any("mood matched (+1.0)" in reason for reason in reasons)
+    assert any("energy similarity" in reason for reason in reasons)
